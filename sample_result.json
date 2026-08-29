@@ -1,0 +1,13 @@
+{
+  "rfp_run_id": "RFP-SAMPLE",
+  "criteria": [
+    {"criterion_id": 1, "name": "Technical Capability", "weight": 30, "max_score": 10},
+    {"criterion_id": 2, "name": "Implementation Plan", "weight": 20, "max_score": 10},
+    {"criterion_id": 3, "name": "Commercial Value", "weight": 20, "max_score": 10},
+    {"criterion_id": 4, "name": "Security & Compliance", "weight": 20, "max_score": 10},
+    {"criterion_id": 5, "name": "Support & Experience", "weight": 10, "max_score": 10}
+  ],
+  "suppliers": [],
+  "warnings": [],
+  "note": "Schema example only. Runtime scores, evidence and justifications come from the configured real LLM."
+}
