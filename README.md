@@ -48,13 +48,13 @@ streamlit run app.py
 
 There is no fake/demo scoring path.
 
-Set:
+This project uses Cohere as the real JSON-capable LLM.
 
-```text
-LLM_API_KEY=...
-LLM_ENDPOINT=https://api.openai.com/v1/chat/completions
-LLM_MODEL=...
-```
+For local development, create a `.env` file:
+
+```env
+COHERE_API_KEY=your_cohere_api_key
+COHERE_MODEL=command-a-plus-05-2026
 
 The endpoint is configurable for a compatible JSON-capable LLM. The request uses temperature 0 and JSON response format. Do not commit API keys. For Streamlit Community Cloud, use Streamlit Secrets.
 
