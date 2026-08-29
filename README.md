@@ -2,9 +2,7 @@
 
 This project implements the supplied classroom brief and aligns the Streamlit application with the Cohere + LangGraph Colab reference.
 
-## Rubric focus: Agentic workflow & tool use — 20 marks
-
-The code intentionally separates **orchestration, LLM reasoning, deterministic tools, persistence, and UI**.
+The code separates **orchestration, LLM reasoning, deterministic tools, persistence, and UI**.
 
 ```text
 app.py
