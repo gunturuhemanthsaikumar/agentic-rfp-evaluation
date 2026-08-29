@@ -1,5 +1,6 @@
 import json
 import cohere
+from config import LLM_SEED, LLM_TEMPERATURE, LLM_TIMEOUT_SECONDS
 
 
 def build_evaluation_prompt(supplier_name, proposal_text, criteria):
@@ -41,7 +42,7 @@ EVALUATION_SCHEMA = {
 class EvaluationAgent:
     """LLM-only responsibility: judge proposal content and return structured evidence."""
     def __init__(self, api_key: str, model_name: str):
-        self.client = cohere.ClientV2(api_key=api_key)
+        self.client = cohere.ClientV2(api_key=api_key, timeout=LLM_TIMEOUT_SECONDS)
         self.model_name = model_name
 
     def evaluate(self, supplier_name, proposal_text, criteria):
@@ -52,7 +53,7 @@ class EvaluationAgent:
                 {"role": "user", "content": build_evaluation_prompt(supplier_name, proposal_text, criteria)},
             ],
             response_format={"type": "json_object", "schema": EVALUATION_SCHEMA},
-            temperature=0,
-            seed=42,
+            temperature=LLM_TEMPERATURE,
+            seed=LLM_SEED,
         )
         return json.loads(response.message.content[0].text)

@@ -1,127 +1,250 @@
-# Agentic RFP Evaluation & Supplier Ranking — Modular Streamlit Application
+# Agentic RFP Evaluation & Supplier Ranking — Streamlit
 
-This project implements the supplied classroom brief and aligns the Streamlit application with the Cohere + LangGraph Colab reference.
+A modular implementation of the classroom **Agentic RFP Evaluation and Supplier Ranking** project.
 
-## Rubric focus: Agentic workflow & tool use — 20 marks
-
-The code intentionally separates **orchestration, LLM reasoning, deterministic tools, persistence, and UI**.
+## Architecture
 
 ```text
-app.py
-  └── ui/dashboard.py
-        └── agents/orchestrator_agent.py   ← LangGraph orchestrator
-              ├── agents/evaluation_agent.py   ← REAL Cohere LLM only
-              ├── tools/document_tool.py       ← PDF extraction
-              ├── tools/validation_tool.py     ← schema/score normalization
-              ├── tools/scoring_tool.py        ← deterministic weighted score
-              ├── tools/ranking_tool.py        ← benchmark/PPI/tie-break/rank
-              └── tools/persistence_tool.py    ← SQLite persistence
-                         ↓
-                  services/database_service.py
+Streamlit UI
+    |
+    v
+LangGraph Orchestrator
+    |
+    +--> Criteria Tool --------> SQLite
+    +--> Document Tool --------> PDF text/page extraction
+    +--> Evaluation Agent -----> REAL Cohere LLM
+    +--> Validation Tool ------> deterministic normalization
+    +--> Scoring Tool ---------> deterministic weighted score
+    +--> Ranking Tool ---------> benchmark + gap + relative % + PPI + tie-breaks
+    +--> Persistence Tool -----> SQLite
 ```
 
-### Responsibility boundary
-
-| Component | Responsibility | LLM? |
-|---|---|---|
-| `RFPOrchestrator` | Controls graph order/state flow | No |
-| `EvaluationAgent` | Judges proposal content and returns evidence-grounded JSON | **Yes — Cohere** |
-| `Document Tool` | Extracts PDF text page-by-page | No |
-| `Validation Tool` | Validates, clips, fills missing criterion records and records warnings | No |
-| `Scoring Tool` | Calculates absolute weighted score | No |
-| `Ranking Tool` | Benchmarks, gaps, relative %, PPI, tie-break and rank | No |
-| `Persistence Tool` | Writes complete run/results | No |
-| Streamlit UI | Presentation/input only | No |
-
-This satisfies the brief's rule that the LLM may judge proposal content but must not decide final arithmetic, benchmarks, tie-breaks or rank.
+**Important:** the Cohere LLM evaluates proposal content only. Python owns arithmetic, benchmarking, PPI, tie-breaking and final rank.
 
 ## Folder structure
 
 ```text
-agentic_rfp_streamlit/
+agentic_rfp_streamlit_v2/
 ├── app.py
 ├── config.py
-├── requirements.txt
-├── README.md
+├── .env.example
 ├── .gitignore
-├── .streamlit/
-│   └── config.toml
+├── requirements.txt
 ├── agents/
-│   ├── __init__.py
 │   ├── evaluation_agent.py
 │   └── orchestrator_agent.py
 ├── tools/
-│   ├── __init__.py
+│   ├── criteria_tool.py
 │   ├── document_tool.py
 │   ├── validation_tool.py
 │   ├── scoring_tool.py
 │   ├── ranking_tool.py
 │   └── persistence_tool.py
 ├── services/
-│   ├── __init__.py
 │   └── database_service.py
 ├── models/
-│   ├── __init__.py
 │   └── schemas.py
 ├── ui/
-│   ├── __init__.py
 │   └── dashboard.py
 ├── scripts/
 │   ├── init_db.py
 │   └── generate_sample_pdfs.py
 ├── tests/
 │   └── test_tools.py
-└── sample_data/
-    ├── apex_systems.pdf
-    ├── brightpath_tech.pdf
-    ├── nexaworks.pdf
-    └── orbit_digital.pdf
+├── sample_data/
+└── .streamlit/
+    └── config.toml
 ```
 
-## Workflow
+## 1. Create and activate virtual environment — Windows PowerShell
 
-`START → load_criteria → extract_documents → evaluate_suppliers → validate_outputs → calculate_scores → benchmark_and_rank → persist_results → END`
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
 
-## Run locally
+If PowerShell blocks activation:
 
-```bash
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\Activate.ps1
+```
+
+You should see `(.venv)` in the terminal prompt.
+
+## 2. Install dependencies
+
+```powershell
 pip install -r requirements.txt
-python scripts/init_db.py
+```
+
+## 3. Configure Cohere
+
+Create `.env` in the project root, beside `app.py`:
+
+```env
+COHERE_API_KEY=your_actual_cohere_api_key
+COHERE_MODEL=command-a-plus-05-2026
+RFP_DB_PATH=data/rfp_evaluation.db
+LLM_TEMPERATURE=0
+LLM_SEED=42
+LLM_TIMEOUT_SECONDS=180
+```
+
+`.env` is ignored by Git. Commit `.env.example`, never the real key.
+
+### Streamlit Community Cloud
+
+Do not upload `.env`. Put the same values in **App → Settings → Secrets**:
+
+```toml
+COHERE_API_KEY = "your_actual_cohere_api_key"
+COHERE_MODEL = "command-a-plus-05-2026"
+RFP_DB_PATH = "data/rfp_evaluation.db"
+LLM_TEMPERATURE = "0"
+LLM_SEED = "42"
+LLM_TIMEOUT_SECONDS = "180"
+```
+
+`config.py` reads Streamlit secrets first and local `.env`/environment variables second.
+
+## 4. Initialize SQLite
+
+```powershell
+python scripts\init_db.py
+```
+
+## 5. Generate the four artificial supplier PDFs
+
+```powershell
+python scripts\generate_sample_pdfs.py
+```
+
+## 6. Run Streamlit
+
+```powershell
 streamlit run app.py
 ```
 
-Enter a real Cohere API key in the sidebar. The production path is **real Cohere → validation → deterministic scoring/ranking**.
+Open `http://localhost:8501`.
 
-## Criteria and formulas
+## Why the screen no longer appears frozen during Cohere evaluation
 
-Default active criteria: Technical Capability 30%, Implementation Plan 20%, Commercial Value 20%, Security & Compliance 20%, Support & Experience 10%.
+LLM calls are blocking network operations. The application now runs the LangGraph workflow in a worker thread while the Streamlit main thread polls a progress queue. The UI displays:
 
-Absolute score:
+- current workflow stage
+- current supplier
+- progress bar
+- completed stages
+- final run ID
+- errors without hiding the exception
 
-`Σ ((criterion score / maximum score) × criterion weight)`
+There is also an explicit Cohere timeout configured by `LLM_TIMEOUT_SECONDS`.
 
-Benchmark = highest valid supplier score for a criterion.
+The production workflow remains synchronous from the orchestrator's business perspective; the worker only prevents the browser UI from looking dead while the network call is in progress.
 
-Gap = supplier score − benchmark.
+## Dashboard sections
 
-Relative performance = `(supplier score / benchmark) × 100`, with zero-safe handling.
+### 🏠 Overview
+Shows the active criteria, total weight, architecture and LLM/Python responsibility split.
 
-PPI = weighted average of relative-performance percentages.
+### 🚀 Evaluate RFP
+- Multiple PDF upload
+- Supplier name
+- Submission date
+- Historical experience rating
+- Active criteria snapshot
+- PDF extraction pre-flight summary
+- Real Cohere evaluation
+- Live workflow progress
 
-Tie-break order: **higher PPI → earlier submission date → higher historical experience rating → supplier name ascending**.
+### 📄 Proposal Viewer
+Shows extracted PDF content page-by-page, plus scorecard evidence and source pages.
 
-## Streamlit dashboard
+### 🏆 Results Explorer
+Shows:
 
-- 🚀 Evaluate RFP — multiple PDF upload and metadata
-- 🏆 Results Explorer — leaderboard, scorecards, evidence, PPI and JSON download
-- 🎯 Criteria Studio — database-backed configurable criteria
-- 🧪 Validation Lab — malformed-output demonstration
-- 🧭 Architecture — visible separation of agents and tools for rubric demonstration
+- winner
+- absolute score
+- PPI
+- supplier count
+- leaderboard
+- comparison chart
+- detailed scorecard
+- criterion score
+- maximum score
+- weight
+- weighted contribution
+- benchmark
+- gap
+- relative performance
+- justification
+- evidence
+- evidence page
+- risks
+- warnings
+- deterministic tie-break rule
+- complete JSON download
 
-## Testing
+### 🎯 Criteria Studio
+Shows and edits the SQLite-backed criteria. Active weights must equal 100% before an evaluation can start.
 
-```bash
+### 🧾 Run Details
+Shows `RFP_RUN_ID`, status, creation time, criteria snapshot, warnings and ranking explanation.
+
+### 🧪 Validation Lab
+Demonstrates malformed/out-of-range/missing LLM output normalization.
+
+### 🧭 Architecture
+Provides a presentation-ready explanation of the 20-mark **Agentic workflow & tool use** criterion.
+
+## Default criteria
+
+| Criterion | Weight | Max |
+|---|---:|---:|
+| Technical Capability | 30% | 10 |
+| Implementation Plan | 20% | 10 |
+| Commercial Value | 20% | 10 |
+| Security & Compliance | 20% | 10 |
+| Support & Experience | 10% | 10 |
+
+## Deterministic formulas
+
+**Absolute weighted score**
+
+```text
+Σ ((criterion score / maximum score) × criterion weight)
+```
+
+**Benchmark** = highest valid supplier score for the criterion.
+
+**Gap** = supplier score − benchmark.
+
+**Relative performance**
+
+```text
+(score / benchmark) × 100
+```
+
+If benchmark is zero, the implementation safely avoids division by zero.
+
+**PPI** = weighted average of criterion relative-performance percentages.
+
+**Tie-break order**
+
+1. Higher PPI
+2. Earlier submission date
+3. Higher historical experience rating
+4. Supplier name ascending
+
+Ranks are assigned only after this stable sort.
+
+## Tests
+
+```powershell
 pytest -q
 ```
 
-The validation test demonstrates out-of-range and missing criteria handling. Ranking tests demonstrate deterministic ordering.
+## Important security note
+
+Never hard-code the Cohere API key in Python and never commit `.env` or `secrets.toml`.

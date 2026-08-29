@@ -1,2 +1,4 @@
-# Streamlit entry point. All application logic is modularized under agents/, tools/, services/, models/ and ui/.
-from ui import dashboard  # noqa: F401
+"""Streamlit entry point for the Agentic RFP Evaluation application."""
+from ui.dashboard import run_app
+
+run_app()

@@ -1,7 +1,9 @@
-__pycache__/
-*.py[cod]
-.pytest_cache/
 .venv/
+__pycache__/
+*.pyc
+.pytest_cache/
 .env
-*.db
-data/
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+.streamlit/secrets.toml
