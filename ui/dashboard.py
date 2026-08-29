@@ -340,9 +340,9 @@ def render_sidebar():
 
         st.markdown("### 🔐 LLM Runtime")
         if config_status():
-            st.success("Cohere connected", icon="✓")
+            st.success("Cohere connected")
         else:
-            st.error("Cohere key missing", icon="!")
+            st.error("Cohere key missing")
             st.caption("Local: .env • Cloud: Streamlit Secrets")
         st.markdown(
             f"""<div class='config-pills'>
