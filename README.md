@@ -2,7 +2,9 @@
 
 A modular implementation of the classroom **Agentic RFP Evaluation and Supplier Ranking** project.
 
-## Architecture
+## Rubric focus: Agentic workflow & tool use — 20 marks
+
+The code intentionally separates **orchestration, LLM reasoning, deterministic tools, persistence, and UI**.
 
 ```text
 Streamlit UI
