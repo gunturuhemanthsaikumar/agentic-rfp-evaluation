@@ -56,4 +56,12 @@ class EvaluationAgent:
             temperature=LLM_TEMPERATURE,
             seed=LLM_SEED,
         )
-        return json.loads(response.message.content[0].text)
+        for item in response.message.content:
+            text = getattr(item, "text", None)
+
+            if text:
+                return json.loads(text)
+
+        raise ValueError(
+            "Cohere response did not contain a text content item."
+        )
