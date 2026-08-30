@@ -70,9 +70,27 @@ def inject_css():
         }
 
         [data-testid="stHeader"] { background:transparent; }
+
+        /* Streamlit Cloud: use the full browser width instead of the
+           narrower default content container. */
+        [data-testid="stMainBlockContainer"] {
+            max-width: none !important;
+            width: 100% !important;
+            padding-left: 2.4rem !important;
+            padding-right: 2.4rem !important;
+        }
+        .block-container {
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        /* Keep the navigation compact so the application content has
+           enough horizontal space on laptops and Streamlit Cloud. */
         [data-testid="stSidebar"] {
             background:linear-gradient(180deg,#080c30 0%,#0d123d 58%,#080b29 100%);
             border-right:1px solid rgba(255,255,255,.08);
+            min-width: 280px !important;
+            max-width: 280px !important;
         }
         [data-testid="stSidebar"] * { color:#eef1ff !important; }
         [data-testid="stSidebar"] [data-testid="stRadio"] label {
@@ -107,16 +125,17 @@ def inject_css():
         .side-run .value {font-weight:750;margin-top:5px;}
 
         .topbar {
-            display:flex;align-items:center;justify-content:space-between;
+            display:flex;align-items:center;justify-content:space-between;gap:22px;
             margin:0 0 18px;padding:5px 0;
         }
-        .title h1 {margin:0;font-size:2.15rem;font-weight:900;letter-spacing:-.045em;color:#101638;}
-        .title p {margin:5px 0 0;color:var(--muted);font-size:.93rem;}
+        .title {min-width:0;flex:1;}
+        .title h1 {margin:0;font-size:clamp(1.7rem,2.4vw,2.35rem);font-weight:900;letter-spacing:-.045em;color:#101638;line-height:1.05;}
+        .title p {margin:7px 0 0;color:var(--muted);font-size:.93rem;}
         .top-status {
-            display:flex;align-items:stretch;background:#fff;border:1px solid var(--line);
+            flex:0 0 auto;display:flex;align-items:stretch;background:#fff;border:1px solid var(--line);
             border-radius:15px;overflow:hidden;box-shadow:0 8px 24px rgba(24,34,73,.05);
         }
-        .status-item {padding:10px 16px;min-width:135px;border-left:1px solid var(--line);}
+        .status-item {padding:10px 14px;min-width:118px;border-left:1px solid var(--line);}
         .status-item:first-child {border-left:0;}
         .status-k {font-size:.68rem;color:#8790a7;}
         .status-v {font-weight:800;font-size:.86rem;color:#202949;margin-top:2px;}
@@ -173,10 +192,24 @@ def inject_css():
         .score-fill {height:100%;background:linear-gradient(90deg,#4f46e5,#8b5cf6);border-radius:99px;}
         .score-meta {font-size:.67rem;color:#7b8498;}
 
-        @media (max-width:1100px) {
+        @media (max-width:1350px) {
+            [data-testid="stMainBlockContainer"] {
+                padding-left: 1.4rem !important;
+                padding-right: 1.4rem !important;
+            }
             .workflow-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
             .kpi-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+        }
+        @media (max-width:900px) {
+            [data-testid="stSidebar"] {min-width:240px !important;max-width:240px !important;}
+            .workflow-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+            .kpi-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
             .top-status {display:none;}
+        }
+        @media (max-width:640px) {
+            [data-testid="stMainBlockContainer"] {padding-left:.8rem !important;padding-right:.8rem !important;}
+            .workflow-grid,.kpi-grid {grid-template-columns:1fr;}
+            .topbar {margin-bottom:12px;}
         }
         </style>
         """,

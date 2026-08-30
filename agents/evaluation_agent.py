@@ -56,19 +56,18 @@ class EvaluationAgent:
             temperature=LLM_TEMPERATURE,
             seed=LLM_SEED,
         )
+        # Cohere may return multiple content item types, including thinking/reasoning items.
+        # Never assume content[0] is the generated text.
         content = getattr(response.message, "content", None) or []
 
         text_parts = []
-
         for item in content:
             text = getattr(item, "text", None)
-
             if isinstance(text, str) and text.strip():
                 text_parts.append(text.strip())
 
         if not text_parts:
             item_types = [type(item).__name__ for item in content]
-
             raise ValueError(
                 "Cohere returned no text content. "
                 f"Content item types: {item_types}"
@@ -78,7 +77,6 @@ class EvaluationAgent:
 
         try:
             return json.loads(raw_text)
-
         except json.JSONDecodeError as exc:
             raise ValueError(
                 "Cohere returned text, but it was not valid JSON. "
