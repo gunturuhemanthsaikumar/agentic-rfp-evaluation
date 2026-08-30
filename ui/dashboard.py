@@ -354,13 +354,13 @@ def render_sidebar():
             "Navigation",
             [
                 "🏠 Overview",
+                "🧭 Architecture",
                 "🚀 Evaluate RFP",
                 "📄 Proposal Viewer",
                 "🏆 Results Explorer",
                 "🎯 Criteria Studio",
                 "🧾 Run Details",
-                "🧪 Validation Lab",
-                "🧭 Architecture",
+                "🛡️ Validation & Quality",
             ],
             label_visibility="collapsed",
         )
@@ -736,21 +736,108 @@ def page_run_details():
 
 def page_validation():
     topbar()
-    st.markdown("## 🧪 Validation Lab")
-    st.caption("Demonstrates the validation tool independently. This does not replace the production Cohere path.")
+    st.markdown("## 🛡️ Validation & Quality Guardrails")
+    st.caption("A controlled demonstration of how the validation tool protects deterministic scoring from malformed or incomplete LLM output.")
+
+    st.info(
+        "🧪 Demonstration mode: the example below is intentionally malformed. "
+        "It is NOT a supplier evaluation and its scores must not be interpreted as Apex, NexaWorks, or any other real supplier result."
+    )
+
+    # Explain where validation sits in the real production workflow.
+    st.markdown("### 🔄 Where validation happens in the real workflow")
+    st.markdown(
+        "<div class='panel'>"
+        "<div class='panel-title'>Real Cohere LLM</div>"
+        "<div class='panel-sub'>Generates criterion score + justification + evidence + evidence page</div>"
+        "</div>"
+        "<div style='text-align:center;font-size:1.4rem;margin:4px 0'>↓</div>"
+        "<div class='panel'>"
+        "<div class='panel-title'>🛡️ Validation Tool</div>"
+        "<div class='panel-sub'>Checks required criteria, score range, duplicate criteria, justification, evidence and evidence page</div>"
+        "</div>"
+        "<div style='text-align:center;font-size:1.4rem;margin:4px 0'>↓</div>"
+        "<div class='panel'>"
+        "<div class='panel-title'>Deterministic Scoring & Ranking</div>"
+        "<div class='panel-sub'>Only validated/normalized results proceed to weighted score, benchmark, PPI and final rank</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
     criteria = get_active_criteria()
-    malformed = {"supplier_name": "Example Supplier", "criteria": [{"criterion_id": 1, "score": 14, "max_score": 10, "justification": "", "evidence": "", "evidence_page": "not-a-number"}], "risks": [], "overall_summary": ""}
-    result = validate_and_normalize(malformed, "Example Supplier", criteria)
-    st.markdown("### Expected validation issues")
-    for warning in result["warnings"]:
+    malformed = {
+        "supplier_name": "Validation Demo Supplier",
+        "criteria": [
+            {
+                "criterion_id": 1,
+                "score": 14,
+                "max_score": 10,
+                "justification": "",
+                "evidence": "",
+                "evidence_page": "not-a-number",
+            }
+            # Criteria 2-5 are deliberately missing.
+        ],
+        "risks": [],
+        "overall_summary": "",
+    }
+
+    result = validate_and_normalize(
+        malformed,
+        "Validation Demo Supplier",
+        criteria,
+    )
+
+    warnings = result.get("warnings", [])
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Issues detected", len(warnings))
+    c2.metric("Criteria normalized", len(result.get("criteria", [])))
+    c3.metric("Final valid score range", "0–10")
+
+    st.markdown("### 🚨 Issues detected")
+    for warning in warnings:
         st.warning(warning)
-    st.markdown("### Normalized result")
-    st.dataframe(pd.DataFrame(result["criteria"]), use_container_width=True, hide_index=True)
+
+    st.markdown("### ✅ What the validator did")
+    actions = [
+        ("Score outside range", "14 → 10", "Clipped to the configured maximum."),
+        ("Missing justification", "Default explanation", "Prevents an empty audit trail."),
+        ("Missing evidence", "No explicit evidence provided", "Prevents unsupported claims."),
+        ("Invalid evidence page", "Invalid value → 0", "Marks the absence of a valid source page."),
+        ("Missing criteria", "Missing IDs → score 0", "Ensures every active criterion exists before scoring."),
+    ]
+    st.dataframe(
+        pd.DataFrame(actions, columns=["Problem", "Normalization", "Purpose"]),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.markdown("### 📋 Normalized result passed to scoring")
+    normalized_df = pd.DataFrame(result["criteria"])
+    st.dataframe(
+        normalized_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "criterion_id": st.column_config.NumberColumn("Criterion"),
+            "score": st.column_config.NumberColumn("Score", format="%.1f"),
+            "max_score": st.column_config.NumberColumn("Max", format="%.1f"),
+            "justification": st.column_config.TextColumn("Justification", width="large"),
+            "evidence": st.column_config.TextColumn("Evidence", width="large"),
+            "evidence_page": st.column_config.NumberColumn("Evidence Page"),
+        },
+    )
+
+    st.success(
+        "Guardrail result: malformed output was detected and normalized before any deterministic score/ranking calculation. "
+        "The production pipeline still uses the real Cohere response; this page only demonstrates the validation mechanism."
+    )
 
 
 def page_architecture():
     topbar()
     st.markdown("## 🧭 Agentic Workflow & Tool Separation")
+    st.markdown("### 20-mark rubric: Agentic workflow & tool use")
     st.info("Clear orchestration and appropriate separation of LLM and tools are demonstrated through LangGraph, a dedicated Evaluation Agent and deterministic Python tools.")
     show_workflow_cards()
     st.markdown("### 🔌 Responsibility map")
@@ -781,7 +868,7 @@ def run_app():
         "🏆 Results Explorer": page_results,
         "🎯 Criteria Studio": page_criteria,
         "🧾 Run Details": page_run_details,
-        "🧪 Validation Lab": page_validation,
+        "🛡️ Validation & Quality": page_validation,
         "🧭 Architecture": page_architecture,
     }
     pages[page]()
