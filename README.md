@@ -2,6 +2,11 @@
 
 A modular implementation of the classroom **Agentic RFP Evaluation and Supplier Ranking** project.
 
+> **Reference Colab Notebook:** `Agentic_RFP_Evaluation_Cohere_LangGraph.ipynb`  
+> **Streamlit Community Cloud:** `https://agentic-rfp-evaluation-rcds3cmg4yxggwubk7awvg.streamlit.app/`
+
+This Streamlit application is the modular deployment implementation aligned with the supplied Colab reference notebook...
+
 ## Architecture
 
 ```text
@@ -195,8 +200,6 @@ Shows `RFP_RUN_ID`, status, creation time, criteria snapshot, warnings and ranki
 ### 🧪 Validation Lab
 Demonstrates malformed/out-of-range/missing LLM output normalization.
 
-### 🧭 Architecture
-Provides a presentation-ready explanation of the 20-mark **Agentic workflow & tool use** criterion.
 
 ## Default criteria
 
