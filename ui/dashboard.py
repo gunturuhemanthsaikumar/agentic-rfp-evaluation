@@ -837,7 +837,6 @@ def page_validation():
 def page_architecture():
     topbar()
     st.markdown("## 🧭 Agentic Workflow & Tool Separation")
-    st.markdown("### 20-mark rubric: Agentic workflow & tool use")
     st.info("Clear orchestration and appropriate separation of LLM and tools are demonstrated through LangGraph, a dedicated Evaluation Agent and deterministic Python tools.")
     show_workflow_cards()
     st.markdown("### 🔌 Responsibility map")
