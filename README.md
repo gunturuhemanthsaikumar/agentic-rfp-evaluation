@@ -60,6 +60,9 @@ agentic_rfp_streamlit_v2/
 └── .streamlit/
     └── config.toml
 ```
+## Dashboard 
+<img width="2876" height="1462" alt="image" src="https://github.com/user-attachments/assets/10be4bb4-5fee-4423-adfa-a2ed7b188d8f" />
+
 
 ## 1. Create and activate virtual environment — Windows PowerShell
 
